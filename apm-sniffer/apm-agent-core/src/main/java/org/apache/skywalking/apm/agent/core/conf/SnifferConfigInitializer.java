@@ -69,6 +69,7 @@ public class SnifferConfigInitializer {
      */
     public static void initializeCoreConfig(String agentOptions) {
         AGENT_SETTINGS = new Properties();
+        // agent.config
         try (final InputStreamReader configFileStream = loadConfig()) {
             AGENT_SETTINGS.load(configFileStream);
             for (String key : AGENT_SETTINGS.stringPropertyNames()) {
@@ -80,6 +81,8 @@ public class SnifferConfigInitializer {
             LOGGER.error(e, "Failed to read the config file, skywalking is going to run in default config.");
         }
 
+        // -D覆盖 System.getProperties()
+        // agent.service_name 对应 -Dskywalking.agent.service_name
         try {
             overrideConfigBySystemProp();
         } catch (Exception e) {
@@ -98,6 +101,7 @@ public class SnifferConfigInitializer {
             }
         }
 
+        // 配置注入静态Config
         initializeConfig(Config.class);
         // reconfigure logger after config initialization
         configureLogger();
@@ -243,9 +247,9 @@ public class SnifferConfigInitializer {
      * @return the config file {@link InputStream}, or null if not needEnhance.
      */
     private static InputStreamReader loadConfig() throws AgentPackageNotFoundException, ConfigNotFoundException {
-        String specifiedConfigPath = System.getProperty(SPECIFIED_CONFIG_PATH);
+        String specifiedConfigPath = System.getProperty(SPECIFIED_CONFIG_PATH);// -Dskywalking_config
         File configFile = StringUtil.isEmpty(specifiedConfigPath) ? new File(
-            AgentPackagePath.getPath(), DEFAULT_CONFIG_FILE_NAME) : new File(specifiedConfigPath);
+            AgentPackagePath.getPath(), DEFAULT_CONFIG_FILE_NAME) /* agent.jar同级/config/agent.config */ : new File(specifiedConfigPath);
 
         if (configFile.exists() && configFile.isFile()) {
             try {

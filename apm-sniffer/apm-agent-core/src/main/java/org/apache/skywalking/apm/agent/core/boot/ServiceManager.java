@@ -39,10 +39,13 @@ public enum ServiceManager {
     private Map<Class, BootService> bootedServices = Collections.emptyMap();
 
     public void boot() {
+        // spi加载所有bootService， key=class，value=instance
         bootedServices = loadAllServices();
-
+        // org.apache.skywalking.apm.agent.core.boot.BootService.prepare
         prepare();
+        // org.apache.skywalking.apm.agent.core.boot.BootService.boot
         startup();
+        // org.apache.skywalking.apm.agent.core.boot.BootService.onComplete
         onComplete();
     }
 
@@ -64,12 +67,14 @@ public enum ServiceManager {
             Class<? extends BootService> bootServiceClass = bootService.getClass();
             boolean isDefaultImplementor = bootServiceClass.isAnnotationPresent(DefaultImplementor.class);
             if (isDefaultImplementor) {
+                // 默认实现
                 if (!bootedServices.containsKey(bootServiceClass)) {
                     bootedServices.put(bootServiceClass, bootService);
                 } else {
                     //ignore the default service
                 }
             } else {
+                // 覆盖实现
                 OverrideImplementor overrideImplementor = bootServiceClass.getAnnotation(OverrideImplementor.class);
                 if (overrideImplementor == null) {
                     if (!bootedServices.containsKey(bootServiceClass)) {
@@ -86,6 +91,7 @@ public enum ServiceManager {
                         if (presentDefault) {
                             bootedServices.put(targetService, bootService);
                         } else {
+                            // 如果OverrideImplementor.value指向class没有DefaultImplementor注解，抛出异常
                             throw new ServiceConflictException(
                                 "Service " + bootServiceClass + " overrides conflict, " + "exist more than one service want to override :" + targetService);
                         }

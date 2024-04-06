@@ -186,7 +186,7 @@ public class AgentClassLoader extends ClassLoader {
 
     private LinkedList<Jar> doGetJars() {
         LinkedList<Jar> jars = new LinkedList<>();
-        for (File path : classpath) {
+        for (File path : classpath) { // "plugins" "activations" 目录下所有jar
             if (path.exists() && path.isDirectory()) {
                 String[] jarFileNames = path.list((dir, name) -> name.endsWith(".jar"));
                 for (String fileName : jarFileNames) {

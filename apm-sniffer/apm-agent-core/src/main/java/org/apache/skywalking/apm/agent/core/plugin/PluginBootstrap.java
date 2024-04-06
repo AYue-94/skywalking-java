@@ -39,8 +39,10 @@ public class PluginBootstrap {
      * @return plugin definition list.
      */
     public List<AbstractClassEnhancePluginDefine> loadPlugins() throws AgentPackageNotFoundException {
+        // 创建【AgentClassLoader】
         AgentClassLoader.initDefaultLoader();
 
+        // AgentClassLoader读取所有【skywalking-plugin.def】文件
         PluginResourcesResolver resolver = new PluginResourcesResolver();
         List<URL> resources = resolver.getResources();
 
@@ -49,6 +51,7 @@ public class PluginBootstrap {
             return new ArrayList<AbstractClassEnhancePluginDefine>();
         }
 
+        // PluginCfg skywalking-plugin.def每行加载为一个 【PluginDefine】
         for (URL pluginUrl : resources) {
             try {
                 PluginCfg.INSTANCE.load(pluginUrl.openStream());
@@ -57,8 +60,10 @@ public class PluginBootstrap {
             }
         }
 
+        // 根据Config.Plugin.EXCLUDE_PLUGINS过滤PluginDefine
         List<PluginDefine> pluginClassList = PluginCfg.INSTANCE.getPluginClassList();
 
+        // 根据PluginDefine提供的className，用AgentClassLoader加载【AbstractClassEnhancePluginDefine】到plugins
         List<AbstractClassEnhancePluginDefine> plugins = new ArrayList<AbstractClassEnhancePluginDefine>();
         for (PluginDefine pluginDefine : pluginClassList) {
             try {
@@ -71,6 +76,7 @@ public class PluginBootstrap {
             }
         }
 
+        // 扩展点，通过java spi加载【InstrumentationLoader】实现类，调用InstrumentationLoader#load加载plugin
         plugins.addAll(DynamicPluginLoader.INSTANCE.load(AgentClassLoader.getDefault()));
 
         return plugins;

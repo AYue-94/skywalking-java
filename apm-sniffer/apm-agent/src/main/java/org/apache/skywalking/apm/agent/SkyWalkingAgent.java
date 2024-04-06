@@ -72,6 +72,7 @@ public class SkyWalkingAgent {
      */
     public static void premain(String agentArgs, Instrumentation instrumentation) throws PluginException {
         final PluginFinder pluginFinder;
+        // 1. 初始化配置
         try {
             SnifferConfigInitializer.initializeCoreConfig(agentArgs);
         } catch (Exception e) {
@@ -90,6 +91,7 @@ public class SkyWalkingAgent {
         }
 
         try {
+            // 2. 加载AbstractClassEnhancePluginDefine
             pluginFinder = new PluginFinder(new PluginBootstrap().loadPlugins());
         } catch (AgentPackageNotFoundException ape) {
             LOGGER.error(ape, "Locate agent.jar failure. Shutting down.");
@@ -101,6 +103,7 @@ public class SkyWalkingAgent {
 
         LOGGER.info("Skywalking agent begin to install transformer ...");
 
+        // 3. 修改class定义
         AgentBuilder agentBuilder = newAgentBuilder().ignore(
             nameStartsWith("net.bytebuddy.")
                 .or(nameStartsWith("org.slf4j."))
@@ -138,6 +141,7 @@ public class SkyWalkingAgent {
 
         LOGGER.info("Skywalking agent transformer has installed.");
 
+        // 4. 启动所有BootService
         try {
             ServiceManager.INSTANCE.boot();
         } catch (Exception e) {
